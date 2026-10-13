@@ -1,0 +1,78 @@
+{
+  "_README": "ตัดสิน (Tatsin) — public routing config. The 7 `rooms` are the classes the shipped checkpoint was TRAINED on; their order maps to letters A-G, so do not reorder. The `label` string is the option TEXT the model scores — it is model-bound, not cosmetic: changing a label's wording without retraining degrades the pick. To route to your own classes, retrain (see README).",
+
+  "_rooms_note": "channel_id is intentionally empty here. It exists only so a downstream consumer (a Discord bot, a ticket router) can map a picked room to its own destination. Put your own id in.",
+
+  "rooms": [
+    { "id": "code",  "label": "ห้อง code (เบส — dev)",          "channel_id": "" },
+    { "id": "tor",   "label": "ห้อง tor (ต่อ — เทรดทอง)",        "channel_id": "" },
+    { "id": "brew",  "label": "ห้อง brew (ฮอป — ต้มเบียร์)",      "channel_id": "" },
+    { "id": "power", "label": "ห้อง power (ไฟ — ไฟฟ้ากำลัง)",     "channel_id": "" },
+    { "id": "cad",   "label": "ห้อง cad (ไหม — 3D design)",      "channel_id": "" },
+    { "id": "data",  "label": "ห้อง data (บูม — วิเคราะห์ข้อมูล)", "channel_id": "" },
+    { "id": "pcb",   "label": "ห้อง pcb (อาร์ม — วงจร)",          "channel_id": "" }
+  ],
+
+  "quarantine": {
+    "_note": "Layer-3 destination. Deliberately NOT inside `rooms` (an 8th entry would shift the A-G letter map). The model never asks the user to confirm — it abstains and hands the item here.",
+    "id": "quarantine",
+    "label": "ห้องกัก (รอตรวจโดยคน)",
+    "channel_id": ""
+  },
+
+  "identity": {
+    "_note": "The wrapper answers the identity question itself; the classifier cannot emit a sentence. keywords are matched ONLY when the message IS the identity question (or has a polite lead-in) — never as a substring — because loose matching answered real work messages with the brand sentence and zero model calls.",
+    "keywords_th": ["คุณคือใคร", "เธอคือใคร", "เธอเป็นใคร", "นายคือใคร", "ตัวเองเป็นใคร", "你是谁", "คุณเป็นใคร", "คุณชื่ออะไร", "เธอชื่ออะไร", "แนะนำตัวหน่อย"],
+    "keywords_en": ["who are you", "who r u", "what are you", "what's your name", "whats your name", "who are u"],
+    "answer_th": "ผมคือ ตัดสิน (Tatsin) — โมเดลตัดสินใจสำหรับงานในบ้าน พัฒนาโดย เอเจ@นาโนไฮโดรฟาร์ม ร่วม บริษัท BST Tech",
+    "answer_en": "I am Tatsin, a small decision model built by AJ@NanoHydroFarm with BST Tech."
+  },
+
+  "pdpa": {
+    "_note": "Mask PII BEFORE logging or sending to any model. Thai letters are word characters, so \\b does not fire in unspaced Thai ('บัตรประชาชน1234567890123ครับ') and PII leaks — digit lookarounds are used instead.",
+    "patterns": {
+      "phone_th": "(?<!\\d)(?:\\+66|0)[\\s-]?\\d(?:[\\s-]?\\d){7,8}(?!\\d)",
+      "citizen_id": "(?<!\\d)\\d[\\s-]?\\d{4}[\\s-]?\\d{5}[\\s-]?\\d{2}[\\s-]?\\d(?!\\d)",
+      "email": "[\\w.+-]+@[\\w-]+\\.[\\w.]+",
+      "credit_card": "(?<!\\d)(?:\\d[ -]?){13,16}(?!\\d)"
+    },
+    "mask": "[REDACTED]"
+  },
+
+  "gates": {
+    "_note_noul_bands": "Calibrated on the project's Thai routing rows. Do NOT tighten without re-scoring — the pinning rows sit closer to the edge than the aggregate suggests.",
+    "_note_noul_sources": "Only models that emit `noul` as a real probability belong here, and the entry is matched against the `source` field the endpoint puts on the wire (not a name we set). Models not listed fall back to the confidence gate. The value below is the source tag of THIS project's checkpoint (whose provenance — the open-source base engine it is fine-tuned from — is credited in NOTICE); replace it with your own checkpoint's source tag if you retrain.",
+    "noul_is_exact_by_model": ["tatsin_v2"],
+    "small_min_confidence": 0.5,
+    "noul_layer1": 0.5,
+    "noul_layer2": 0.3,
+    "noul_layer2_margin": 0.5,
+    "pairwise_abstain_votes": 3,
+    "big_min_confidence": 0.6
+  },
+
+  "nway": {
+    "_note": "The small model was trained on pairwise A/B. `single` asks one 7-way question (off-distribution, cheap); `pairwise` seeds with one 7-way then runs an A/B knockout with position swapped (in-distribution, more calls). swap_check cancels the measured position bias. `max_calls` is the TOTAL per-request cap: the pairwise knockout needs 2 slots per pair (a pair is only trustworthy with its swap), and when a big model is configured one slot is reserved for the layer-2 escalation, so a request never exceeds max_calls calls end to end.",
+    "strategy": "pairwise",
+    "swap_check": true,
+    "max_calls": 16
+  },
+
+  "endpoints": {
+    "_note": "Two connection points YOU set. (1) `tatsin_decide` = the small-model server (ships with this package, contract: POST {state, question, options[]} -> {pick, confidence, noul, margin, ranked, coverage, source}). (2) `big_openai` = the BIG-model API the ladder calls when the small model is NOT confident (layer 2). It is any OpenAI-compatible endpoint — a local Ollama/vLLM, or a hosted API. Leave it empty to turn layer 2 off (unsure -> quarantine); fill it to opt in. There is no house default.",
+    "_fallbacks": "Env vars override the file. BIG (layer 2) is off when both TATSIN_BIG_URL and `big_openai` are empty: TATSIN_SMALL_URL / TATSIN_SMALL_NAME / TATSIN_BIG_URL / TATSIN_BIG_MODEL / TATSIN_BIG_KEY / TATSIN_API_KEY.",
+    "tatsin_decide": "http://127.0.0.1:8140/tatsin/decide",
+    "big_openai": "",
+    "big_model": "your-big-model",
+    "embed": "http://127.0.0.1:8091/v1/embeddings",
+    "qdrant": "http://127.0.0.1:6333",
+    "qdrant_collection": "tatsin_labels"
+  },
+
+  "coverage_policy": "abstain",
+
+  "timeouts": {
+    "small_ms": 30000,
+    "big_ms": 60000
+  }
+}

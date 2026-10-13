@@ -1,0 +1,16 @@
+# Layer-1 (small model) server deps -- Python 3.10+.
+#
+# The serving code builds the encoder with `transformers` and loads the saved
+# state dict directly (rl_agent_api.py + rl_common.py, shipped here). It does
+# NOT need the upstream `laya` helper package -- that is only for the base
+# engine's own `laya.load()` convenience API.
+#
+# decide_endpoint.py sets USE_TF=0 on its own: transformers probes for
+# TensorFlow at import and its abseil runtime can deadlock the model build.
+#
+# CPU wheels are enough (device defaults to cpu). A CUDA build of torch is
+# optional and only speeds up the forward pass.
+torch>=2.4
+transformers>=5.0
+safetensors>=0.4
+numpy>=1.24

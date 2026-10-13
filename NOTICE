@@ -1,0 +1,27 @@
+ตัดสิน (Tatsin) — Thai routing decision model
+Copyright 2026 AJ@NanoHydroFarm and BST Tech (เอเจ@นาโนไฮโดรฟาร์ม ร่วม บริษัท BST Tech)
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+================================================================================
+THIRD-PARTY ATTRIBUTION  (Apache License 2.0, Section 4)
+================================================================================
+
+This product includes a derivative of software developed by Convai Innovations.
+
+  Base engine : "Laya Multilingual" (mmBERT-base, 322M params)
+  Developed by: Convai Innovations
+  Source      : https://huggingface.co/convaiinnovations/laya
+  License     : Apache License 2.0
+  Copyright   : Convai Innovations
+
+MODIFICATIONS (Apache-2.0, Section 4b — this product changed the base engine):
+  - Fine-tuned on Thai routing data over 7 task-room classes, producing the
+    project's own checkpoint (source tag: "tatsin_v2").
+  - Wrapped in this package's service: PDPA masking, identity short-circuit,
+    a 3-layer decision ladder, and calibrated noul gates.
+
+NOTICE
+  This product is NOT endorsed by, sponsored by, or affiliated with Convai
+  Innovations. "Laya" is a product name of Convai Innovations and is referenced
+  here only to describe the origin of the work (Apache-2.0, Section 6).
+  The base engine contains no NOTICE text file upstream, so none is reproduced.

@@ -1,0 +1,8 @@
+# Runtime deps for the Tatsin routing service (app.py -> clients.py, ladder.py).
+# Floors are versions the suite and a live end-to-end run passed on
+# (Python 3.10). Kept as >= so a deploy box is not pinned to one machine's build
+# -- bump deliberately, not accidentally.
+fastapi>=0.137.0
+pydantic>=2.12.3
+requests>=2.32.3
+uvicorn>=0.34.3

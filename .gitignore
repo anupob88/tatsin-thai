@@ -1,0 +1,35 @@
+# ---- Model weights (published separately on Hugging Face) ----
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.gguf
+*.onnx
+*.h5
+model_server/ckpt/
+ckpt/
+ckpt_*/
+
+# ---- Credentials / local env ----
+.env
+.env.*
+*.env
+*.token
+*credentials*
+secrets*
+!requirements.txt
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+*.egg-info/
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+*.swp
+*~
