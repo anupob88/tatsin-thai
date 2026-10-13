@@ -126,9 +126,9 @@ class AppEnforcement(unittest.TestCase):
             lambda: app_module.decide(req, make_request("203.0.113.7"), None))
 
     def test_direct_uvicorn_launch_from_remote_is_not_a_bypass(self):
-        # The scenario Tonhop flagged: someone runs `uvicorn app:app --host
-        # 0.0.0.0` directly, skipping serve.py. A remote request still hits the
-        # in-app check and is refused, because the check reads the PEER.
+        # The scenario where someone runs `uvicorn app:app --host 0.0.0.0`
+        # directly, skipping serve.py. A remote request still hits the in-app
+        # check and is refused, because the check reads the PEER.
         req = app_module.DecideRequest(state="งานอะไรสักอย่าง")
         self._assert_403(
             lambda: app_module.decide(req, make_request("198.51.100.9"), None))
